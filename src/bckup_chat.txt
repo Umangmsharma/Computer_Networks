@@ -1,0 +1,399 @@
+#include<stdio.h>
+#include <sys/socket.h>
+#include "chat.h"
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include<stdlib.h>
+#include <stdint.h>
+#include <string.h>
+#include <signal.h>
+#include<stdbool.h>
+#include <netinet/tcp.h>
+#include <unistd.h>
+#include <errno.h>
+#include <pthread.h>
+
+
+
+#define MAX 255
+int num_conn = 0;
+//int connfd = -1;
+int flag = 1;
+
+struct client_det {
+struct sockaddr_in sock_add;
+int connfd;
+};
+
+void* client_connection_handler(void* client_struct){
+
+   struct client_det *cli = client_struct;
+   char buff[MAX];
+   char sendbuff[MAX];
+   int res =0;
+
+   int n =0; 
+ 
+    while(1) {
+      //  bzero(buff, MAX);
+        memset(buff, 0, sizeof(buff));
+
+        printf("reading from fd :  %d \n",cli->connfd);
+        if((n = read(cli->connfd, buff, sizeof(buff))) > 0){
+	   buff[n] ='\n';
+        // print buffer which contains the client contents
+                printf("\ngot message from ('%s', %hu)\n",inet_ntoa(cli->sock_add.sin_addr),htons(cli->sock_add.sin_port));
+                if(strncmp((const char*)buff,"hello",5) == 0) {
+                        printf(" In %s\n",buff);
+                         strcpy((char*)sendbuff,"world");
+                         printf("Write fd: %d \n",cli->connfd);
+                         res = write(cli->connfd, sendbuff, sizeof(buff));
+                         if(res < 0) { printf("write failure \n");}
+        		 memset(buff, 0, sizeof(buff));
+        		 memset(sendbuff, 0, sizeof(sendbuff));
+
+                 } else if(strncmp(buff,"goodbye",7) == 0) {
+                        printf(" In %s\n",buff);
+                         strcpy((char*)buff,"farewell");
+                         printf("Write fd: %d \n",cli->connfd);
+                         res = write(cli->connfd, buff, sizeof(buff));
+                         if(res < 0) { printf("write failure \n");}
+                         close(cli->connfd);
+			 break;
+                         // Accept the data packet from client and verification
+                    
+#if 0
+			   connfd = accept(sockfd, (struct sockaddr *) cli,(socklen_t *) &len);
+                       if (connfd < 0) {
+                        printf(" yyyserver acccept failed...\n");
+                        exit(0);
+                       }
+                       else{
+                        printf(" Func connection %d from ('%s', %hu)\n", num_conn++, inet_ntoa(cli->sin_addr), htons(cli->sin_port));
+                        }
+#endif             
+   		} else if(strncmp((const char*)buff,"exit",4) == 0) {
+                        printf(" In %s\n",buff);
+                         strcpy((char*)buff,"ok");
+                         res = write(cli->connfd, buff, sizeof(buff));
+                         if(res < 0) { printf("write failure \n");}
+                         close(cli->connfd);
+                       //  close(sockfd);
+			printf("breaking out of here\n");
+			flag = 0;
+			close(sockfd);
+                        break;
+                } else {
+                        printf(" In %s\n",buff);
+        		memset(sendbuff,'\0', sizeof(sendbuff));
+                         strcpy((char*)sendbuff,(char *)buff);
+                         printf("Write fd: %d, msg sent:%s \n",cli->connfd, sendbuff);
+        		memset(buff, '\0', sizeof(buff));
+                        res = write(cli->connfd, sendbuff, sizeof(sendbuff));
+                         if(res < 0) { printf("write failure \n");}
+        		memset(sendbuff, '\0', sizeof(sendbuff));
+            }
+
+}
+        memset(buff, 0, sizeof(buff));
+}
+    printf("end of func\n");
+    pthread_exit(NULL);
+
+}
+
+void tcp_chat_server(char* iface, long port){
+    int  len;
+    struct sockaddr_in servaddr, cli;
+    int optval = true;
+    int sockfd;
+
+     
+    // socket create and verification
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd == -1) {
+        printf("socket creation failed...\n");
+        exit(0);
+    }
+
+    bzero(&servaddr, sizeof(servaddr));
+
+    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval,
+                         sizeof(optval))) {
+ 	    printf("REUSEADDR set\n");
+    }
+  
+    // assign IP, PORT
+    servaddr.sin_family = AF_INET;
+    inet_pton(AF_INET,"127.0.0.1",(void *)&
+(servaddr.sin_addr.s_addr));
+    servaddr.sin_port = htons(port);
+ 
+
+     int num_conn = 0;
+    // Binding newly created socket to given IP and verification
+    if ((bind(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr))) != 0) {
+        printf("socket bind failed...\n");
+        exit(0);
+    }
+  
+    // Now server is ready to listen and verification
+    if ((listen(sockfd, 50)) != 0) {
+        printf("Listen failed...\n");
+        exit(0);
+    }     
+
+    pthread_t new_conn_thread[10];
+    int i = 0,connfd;
+    len = sizeof(cli);
+    while(flag && (connfd=accept(sockfd, (struct sockaddr *)&cli, (socklen_t *)&len))) {
+
+   // len = sizeof(cli);
+  
+  
+    printf("connection %d from ('%s', %hu) connfd : %d\n", num_conn++,inet_ntoa(cli.sin_addr), htons(cli.sin_port), connfd);
+   // pthread_t new_conn_thread;
+    // Accept the data packet from client and verification
+#if 0
+    connfd = accept(sockfd, (struct sockaddr *)&cli, (socklen_t *)&len);
+    if (connfd < 0) {
+        printf(" hhhserver acccept failed...\n");
+        exit(0);
+	break;
+    }
+    else{
+	
+        printf("connection %d from ('%s', %hu)\n", num_conn++,inet_ntoa(cli.sin_addr), htons(cli.sin_port));
+     }
+#endif   
+    struct client_det instance;
+    memset(&instance, 0, sizeof(instance));
+    instance.connfd = connfd;
+    instance.sock_add = cli;
+  //  printf("where is it pthread\n");
+    if( pthread_create( &new_conn_thread[i++] , NULL , client_connection_handler , &instance) < 0)
+    {
+         printf("could not create thread");
+         break;
+    }
+    
+ //   printf("where is it after pthread\n");
+#if 0
+    if (i > 1) {
+	i =0;   
+	while(i<2) {
+	  printf("2 clients now. joining \n");
+  	  pthread_join(new_conn_thread[i], NULL);
+	}
+	i=0;
+   // bzero(buff, MAX);
+   } 
+#endif
+   //  pthread_exit(NULL);  
+    if (connfd < 0) {
+        printf(" hhhserver acccept failed...\n");
+        exit(0);
+	break;
+    }
+   // printf("where is it\n");
+    memset(&cli, 0, sizeof(cli));
+}
+// printf("closing sockfd\n");
+ close(sockfd);
+}
+
+void udp_chat_server(long port){
+     int res = 0, flag = 0;
+     struct sockaddr_in serv_addr;
+     struct sockaddr_in remote_addr ;
+     socklen_t addrlen = sizeof(remote_addr);
+     uint16_t recvlen;
+     unsigned long rx_data_buf[MAX];
+     static unsigned long tx_data_buf[MAX];
+     int sockfd = -1;
+
+
+    sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (sockfd < 0) {
+        printf("Failed to get a vaild Socket File Descriptor\n");
+    }
+
+    memset(&serv_addr, 0, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = port;
+    serv_addr.sin_port = htons(serv_addr.sin_port);
+    serv_addr.sin_addr.s_addr = INADDR_ANY;
+
+    if (bind(sockfd, (struct sockaddr *)&serv_addr,
+        sizeof(serv_addr)) < 0) {
+        printf("Transport: Config Socket Bind failed,"
+                "errno : %d, error code : %s \n",
+                errno, strerror(errno));
+    }
+
+    while(1) {
+	    memset(rx_data_buf, 0, sizeof(rx_data_buf));
+	    recvlen = recvfrom(sockfd, rx_data_buf,
+			MAX, 0, (struct sockaddr *)&remote_addr,
+			&addrlen);
+	    if (recvlen <= 0 ) {
+		printf("Config Packet Reception from Remote Peer failed\n");
+		return;
+	    }
+
+       	    printf("got message from ('%s', %hu)\n",inet_ntoa(remote_addr.sin_addr),htons(remote_addr.sin_port));
+	    
+	    if(strncmp("hello",(const char*)rx_data_buf,4) == 0){
+		
+		strcpy((char*)tx_data_buf,"world");
+	    } else if (strncmp("goodbye",(const char*)rx_data_buf,7) == 0){
+		strcpy((char*)tx_data_buf,"farewell");
+		
+	    } else if (strncmp("exit",(const char*)rx_data_buf,4) == 0){
+		strcpy((char*)tx_data_buf,"ok");
+		flag = 1;
+	    } else {
+		strcpy((char*)tx_data_buf,(char*)rx_data_buf);
+	    }
+
+	    res = sendto(sockfd, tx_data_buf,
+		   strlen((const char*)tx_data_buf), 0,
+		   (struct sockaddr *)&remote_addr,
+		   sizeof(remote_addr));
+	    if (res <= 0 ) {
+		printf("Failed to send data, "
+				    "value returned : %d\n", res);
+	    }
+		
+	    if(flag == 1) {
+		close(sockfd);
+		flag = 0;
+		break;
+		
+	    }
+}
+}
+/*
+ *  Here is the starting point for your netster part.1 definitions. Add the 
+ *  appropriate comment header as defined in the code formatting guidelines
+ */
+
+/* Add function definitions */
+void chat_server(char* iface, long port, int use_udp) {
+ 
+
+	if(use_udp == 0) {
+		/* Take the TCP code path */
+		tcp_chat_server(iface,port);
+	} else {
+		/* Take the UDP code path */
+		udp_chat_server(port);
+	}
+}
+
+void tcp_chat_client(char* host,long port){
+    int sockfd, res;
+    struct sockaddr_in servaddr;
+    char recv_buff[MAX];
+    char send_buff[MAX];
+  
+    // socket create and varification
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd == -1) {
+        printf("socket creation failed...\n");
+        exit(0);
+    }
+
+    bzero(&servaddr, sizeof(servaddr));
+  
+    // assign IP, PORT
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    servaddr.sin_port = htons(port);
+  
+    // connect the client socket to server socket
+    if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) != 0) {
+        printf("connection with the server failed...\n");
+        exit(0);
+    }
+
+      bzero(send_buff, sizeof(send_buff));
+      bzero(recv_buff, sizeof(recv_buff));
+        
+ 	while(1) {
+		int n = 0;
+		while ((send_buff[n++] = getchar()) != '\n')
+ 		;
+		res = write(sockfd, send_buff, sizeof(send_buff));
+	        if(res < 0) { printf("write failure \n");}
+	
+		if(read(sockfd, recv_buff, sizeof(recv_buff)) > 0){
+			printf("%s\n",recv_buff);
+		// print buffer which contains the client contents
+			if((strncmp((const char*)recv_buff,"farewell",8) == 0) || (strncmp((const char*)recv_buff,"ok",2) == 0)){
+				close(sockfd);
+				break; 
+			}
+		} 
+	}	
+}
+
+void udp_chat_client(char* host,long port){
+        int sockfd;
+    char send_buff[MAX],buffer[MAX];
+   // char *hello = "Hello from client";
+    struct sockaddr_in     servaddr;
+  
+    // Creating socket file descriptor
+    if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
+        perror("socket creation failed\n");
+        exit(EXIT_FAILURE);
+    }
+  
+    memset(&servaddr, 0, sizeof(servaddr));
+    bzero(send_buff, sizeof(send_buff));
+    bzero(buffer, sizeof(buffer));
+ 
+    // Filling server information
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_port = htons(port);
+    servaddr.sin_addr.s_addr = INADDR_ANY;
+      
+    int n=0, len;
+
+    while(1) {
+   
+    bzero(send_buff, sizeof(send_buff));
+    bzero(buffer, sizeof(buffer));
+    n=0;
+    while ((send_buff[n++] = getchar()) != '\n')
+	;
+
+	    sendto(sockfd, send_buff, strlen(send_buff),
+		0,    (struct sockaddr*) &servaddr, 
+		 sizeof(servaddr));
+		  
+	    n = recvfrom(sockfd, (char *)buffer, MAX, 
+			MSG_WAITALL, (struct sockaddr *) &servaddr,
+			(socklen_t *)(&len));
+	    printf("%s\n",buffer);
+	    if(strncmp("farewell",(const char*)buffer, 8) == 0) {
+		close(sockfd);
+		break;
+            } else if(strncmp("ok",buffer, 2) == 0) {
+		close(sockfd);
+		break;
+	    }
+}
+}
+
+void chat_client(char* host, long port, int use_udp) {
+  
+
+     if(use_udp == 0){
+	tcp_chat_client(host,port);
+     } else {
+	udp_chat_client(host,port);
+     }
+
+}

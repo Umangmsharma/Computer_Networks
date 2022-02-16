@@ -1,0 +1,345 @@
+#include<stdio.h>
+#include <sys/socket.h>
+#include "chat.h"
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include<stdlib.h>
+#include <stdint.h>
+#include <string.h>
+#include <signal.h>
+#include<stdbool.h>
+#include <netinet/tcp.h>
+#include <unistd.h>
+#include <errno.h>
+#include <pthread.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+
+
+
+#define SERVER_IP "127.0.0.1"
+#define SERVER_PORT 6767
+#define MAX 255
+#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
+
+typedef struct message_file
+{  
+   boolean end_msg = false;
+   char header[9];
+   char file_data[246];
+} message;
+
+struct sockaddr_in remote_addr ;
+socklen_t addrlen = sizeof(remote_addr);
+int f_sockfd = 0;
+
+bool read_udpfile(int sock, FILE *f)
+{
+	long filesize = 0;
+	char buffer[MAX];
+	int recvd = 0;
+
+	int num =  sizeof(buffer);
+
+	while((recvd = recvfrom(sock, buffer,
+			MAX, 0, (struct sockaddr *)&remote_addr,
+			(socklen_t* )&num)) > -1)
+	{
+	  
+	    if(strncmp((const char*)buffer, "END",3) == 0) {
+		printf("exit udp server, recvd_bytes : %d \n", recvd);
+		close(sock);
+		exit(0);
+
+	    }
+
+	    int offset = 0;
+	    printf("will write %d bytes in file now \n", recvd);
+	    do
+	    {
+		size_t written = fwrite(&buffer[offset], 1, recvd-offset, f);
+		if (written < 1)
+		    return false;
+		offset += written;
+	    }
+	    while (offset < recvd);
+
+	    filesize -= (recvd);
+	    bzero(buffer, MAX);
+	}
+
+    return true;
+}
+
+
+void f_udp_chat_server(long port, FILE* fp){
+     struct sockaddr_in serv_addr;
+     int u_sockfd = -1;
+
+
+    u_sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (f_sockfd < 0) {
+        printf("Failed to get a vaild Socket File Descriptor\n");
+    }
+
+    memset(&serv_addr, 0, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = port;
+    serv_addr.sin_port = htons(serv_addr.sin_port);
+    serv_addr.sin_addr.s_addr = INADDR_ANY;
+
+    if (bind(u_sockfd, (struct sockaddr *)&serv_addr,
+        sizeof(serv_addr)) < 0) {
+        printf("Transport: Config Socket Bind failed,"
+                "errno : %d, error code : %s \n",
+                errno, strerror(errno));
+    }
+
+    bool ok = read_udpfile(u_sockfd, fp);
+
+    if (!ok)
+    {
+	printf("error read");
+    }
+
+    close(u_sockfd);
+    exit(0);
+}
+
+/*
+ *  Here is the starting point for your netster part.1 definitions. Add the 
+ *  appropriate comment header as defined in the code formatting guidelines
+ */
+
+/* Add function definitions */
+
+void stopandwait_server(char* iface, long port, FILE* fp) {
+
+	if(use_udp == 0) {
+		/* Take the TCP code path */
+		f_tcp_chat_server(iface,port, fp);
+	} else {
+		/* Take the UDP code path */
+		f_udp_chat_server(port, fp);
+	}
+}
+
+bool senddata(int sock, void *buf, int buflen)
+{
+    unsigned char *pbuf = (unsigned char *) buf;
+
+    while (buflen > 0)
+    {
+        int num = send(sock, pbuf, buflen, 0);
+        if (num == -1)
+        {
+            return false;
+        }
+
+        pbuf += num;
+        buflen -= num;
+    }
+
+    return true;
+}
+
+bool send_file(int sock, FILE *f)
+{
+    fseek(f, 0, SEEK_END);
+    long filesize = ftell(f);
+	
+    printf("filesize being sent : %ld\n", filesize);
+    rewind(f);
+    if (filesize == EOF)
+        return false;
+
+    if (filesize > 0)
+    {
+        char buffer[MAX];
+        do
+        {
+            size_t num =  sizeof(buffer);
+            num = fread(buffer, 1, num, f);
+            if (num < 1)
+                return false;
+
+            if (!senddata(sock, buffer, num))
+                return false;
+
+            filesize -= num;
+        }
+        while (filesize > 0);
+    }
+    return true;
+}
+
+
+bool send_udpdata(int sock,struct sockaddr_in servaddr, void *buf, int buflen)
+{
+    unsigned char *pbuf = (unsigned char *) buf;
+
+    while (buflen > 0)
+    {
+	int num = sendto(sock, pbuf, buflen, 0, (struct sockaddr*)&servaddr, sizeof(servaddr));
+        if (num == -1)
+        {
+            return false;
+        }
+
+	printf("buff sent : %s", pbuf);
+        pbuf += num;
+        buflen -= num;
+    }
+
+    return true;
+}
+
+bool send_rudpfile(int sock, struct sockaddr_in servaddr, FILE *f)
+{
+    fseek(f, 0, SEEK_END);
+    long filesize = ftell(f);
+    rewind(f);
+
+    message msg;
+    char ack_buffer[MAX];
+    boolean packet_acked = false;
+    int Seq_num = 0, Ack_num = 0;
+
+    struct timeval timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 200;
+    size_t num ;
+
+    struct timeval last;
+    socklen_t lastlen = sizeof(last);
+
+
+    if (setsockopt (sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout,
+                sizeof(timeout)) < 0)
+        perror("setsockopt failed\n");
+
+
+    r = getsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &last, &lastlen);
+        if (r < 0) return r;
+
+  //  if (r == 0) { printf("socket option for RCVTIMOUT was set \n"); }
+
+    printf("filsize to be sent : %ld \n ", filesize); 
+    printf("Buffer size  : %ld, \n data size : %d , \n header size : %d \n end flag size : %d  \n\n", sizeof(message), sizeof(message.file_data), sizeof(message.header), sizeof(message.end_msg)); 
+
+    if (filesize == EOF)
+        return false;
+
+    if (filesize > 0)
+    {
+        char buffer[MAX];
+        do
+        {
+	    bzero(msg.header, sizeof(msg.header));
+		
+   	    snprintf(msg.header, sizeof(msg.header),	
+			             "SeqNum:%d",Seq_num);
+	     
+	    bzero(msg.file_data, sizeof(msg.file_data));
+
+
+            size_t num =  sizeof(msg.file_data);
+            num = fread(msg.file_data, 1, num, f);
+            if (num < 1)
+                return false;
+
+	    printf("Size read from file : %d \n \n", num);
+            
+	    if((filesize - num)  < sizeof(msg.file_data)) {
+		printf("Should be end packet \n ");	
+		msg.end_msg = true;
+	    }	  
+
+	    send_bytes = num + sizeof(msg.header) + sizeof(msg.end_msg);
+	    printf(" SEND \n HEADER :  %s,\n DATA : %s : \n \n Size :  %d \n \n", msg.header, msg.file_data, send_bytes);
+
+	    bzero(buffer, MAX);
+	    memcpy(buffer, &msg, sizeof(message));
+  		
+	do
+	{
+		
+	    printf("Sending packet \n \n ");
+            if (!send_udpdata(sock, servaddr,  buffer, send_bytes))
+                return false;
+
+	    bzero(ack_buffer, MAX);
+	    if(recvd = recvfrom(sock, ack_buffer,
+                        MAX, 0, (struct sockaddr *)&servaddr,
+                        (socklen_t* )&recv_size)  > 0){
+
+		 printf("ack received  : %s \n", ack_buffer);
+                 const char s[4] = ":";
+                 char *token;
+
+                 token = strtok(ack_buffer,s);
+                 if (strcmp(token, "AckSeq") == 0)
+                 {
+                        token = strtok(NULL, s);
+                        printf("ack num recv : %d \n",atoi(token));
+
+                 }
+
+                Ack_num = atoi(token);
+
+                if(Ack_num == Seq_num){
+                        printf("Packet ACKED \n");
+                        packet_acked = true;
+                }
+	     }
+        }
+        while (packet_acked == false);
+
+	packet_acked = false;
+	Seq_num = 1 - Seq_num;
+        filesize -= num;
+
+    } while (filesize > 0);
+
+   }
+
+    return true;
+}
+
+void stopandwait_client(char* host, long port, FILE* fp) {
+        int f_sockfd;
+    char send_buff[MAX],buffer[MAX];
+    struct sockaddr_in     servaddr;
+  
+    // Creating socket file descriptor
+    if ( (f_sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
+        perror("socket creation failed\n");
+        exit(EXIT_FAILURE);
+    }
+  
+    memset(&servaddr, 0, sizeof(servaddr));
+    bzero(send_buff, sizeof(send_buff));
+    bzero(buffer, sizeof(buffer));
+ 
+    // Filling server information
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_port = htons(port);
+    res = inet_pton(AF_INET, host,
+                    &(servaddr.sin_addr));
+    if (res != 1) {
+            printf("Failed to retrieve local chassis ip address,"
+                     "errno : %d, error code : %s",errno, strerror(errno));
+            return;
+    }
+      
+    bzero(send_buff, sizeof(send_buff));
+    bzero(buffer, sizeof(buffer));
+    
+     // Sending the data
+  
+    send_rudpfile(f_sockfd, servaddr, fp);
+
+
+   close(f_sockfd);     
+   exit(0);
+}

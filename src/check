@@ -1,0 +1,551 @@
+Hello, I am a client
+should be gbn client 
+gbn clientfilsize to be sent : 6121 
+Intial end msg flag : N 
+Buffer size  : 256, 
+data size : 252 , 
+header size : 3 
+end flag size : 1  
+
+base : 0, next_seqsum : 0 , window size : 5 
+ 
+Size read from file : 252 
+ 
+SEND 
+HEADER :  0,
+DATA : The following are the graphical (non-control) characters defined by
+ISO 8859-1 (1987).  Descriptions in words aren't all that helpful,
+but they're the best we can do in text.  A graphics file illustrating
+the character set should be available from the 
+ 
+Buffer size send :  256 
+ 
+ 
+Sending packet seq num : 0 
+ 
+ Next packet seqnum : 1, base : 0, window_size : 5, base_window_size : 5 
+Last packet : 0 
+ 
+ Size read from file : 252 
+ 
+SEND 
+HEADER :  1,
+DATA : same archive as this
+file.
+
+Hex Description                 Hex Description
+
+20  SPACE
+21  EXCLAMATION MARK            A1  INVERTED EXCLAMATION MARK
+22  QUOTATION MARK              A2  CENT SIGN
+23  NUMBER SIGN                 A3  POUND SIGN
+24  DOLLAR
+ 
+Buffer size send :  256 
+ 
+ 
+Sending packet seq num : 1 
+ 
+ Next packet seqnum : 2, base : 0, window_size : 5, base_window_size : 5 
+Last packet : 0 
+ 
+ Size read from file : 252 
+ 
+SEND 
+HEADER :  2,
+DATA :  SIGN                 A4  CURRENCY SIGN
+25  PERCENT SIGN                A5  YEN SIGN
+26  AMPERSAND                   A6  BROKEN BAR
+27  APOSTROPHE                  A7  SECTION SIGN
+28  LEFT PARENTHESIS            A8  DIAERESIS
+29  RIGHT PARENTHESIS    
+ 
+Buffer size send :  256 
+ 
+ 
+Sending packet seq num : 2 
+ 
+ Next packet seqnum : 3, base : 0, window_size : 5, base_window_size : 5 
+Last packet : 0 
+ 
+ Size read from file : 252 
+ 
+SEND 
+HEADER :  3,
+DATA :        A9  COPYRIGHT SIGN
+2A  ASTERISK                    AA  FEMININE ORDINAL INDICATOR
+2B  PLUS SIGN                   AB  LEFT-POINTING DOUBLE ANGLE QUOTATION MARK
+2C  COMMA                       AC  NOT SIGN
+2D  HYPHEN-MINUS                AD  SOFT
+ 
+Buffer size send :  256 
+ 
+ 
+Sending packet seq num : 3 
+ 
+ Next packet seqnum : 4, base : 0, window_size : 5, base_window_size : 5 
+Last packet : 0 
+ 
+ Size read from file : 252 
+ 
+SEND 
+HEADER :  4,
+DATA :  HYPHEN
+2E  FULL STOP                   AE  REGISTERED SIGN
+2F  SOLIDUS                     AF  OVERLINE
+30  DIGIT ZERO                  B0  DEGREE SIGN
+31  DIGIT ONE                   B1  PLUS-MINUS SIGN
+32  DIGIT TWO                   B2  SUPERSCRIPT
+ 
+Buffer size send :  256 
+ 
+ 
+Sending packet seq num : 4 
+ 
+ Next packet seqnum : 5, base : 0, window_size : 5, base_window_size : 5 
+Last packet : 0 
+ 
+ Size read from file : 252 
+ 
+SEND 
+HEADER :  5,
+DATA :  TWO
+33  DIGIT THREE                 B3  SUPERSCRIPT THREE
+34  DIGIT FOUR                  B4  ACUTE ACCENT
+35  DIGIT FIVE                  B5  MICRO SIGN
+36  DIGIT SIX                   B6  PILCROW SIGN
+37  DIGIT SEVEN                 B7  MIDDLE DOT
+3
+ 
+Buffer size send :  256 
+ 
+ 
+Sending packet seq num : 5 
+ 
+ Next packet seqnum : 6, base : 0, window_size : 5, base_window_size : 5 
+Last packet : 0 
+ 
+ Check if there's any packet 
+ack num recv : 0 
+base updated : 1
+ack num recv : 1 
+base updated : 2
+ack num recv : 2 
+base updated : 3
+ack num recv : 3 
+base updated : 4
+ack num recv : 4 
+base updated : 5
+ack num recv : 5 
+base updated : 6
+Current seqnum :6 
+
+Timeout, will send packets from base : 6 to next_seqnum : 6 
+ 
+filesize remaining : 4861 , base : 6 
+ 
+Size read from file : 252 
+ 
+SEND 
+HEADER :  6,
+DATA : 8  DIGIT EIGHT                 B8  CEDILLA
+39  DIGIT NINE                  B9  SUPERSCRIPT ONE
+3A  COLON                       BA  MASCULINE ORDINAL INDICATOR
+3B  SEMICOLON                   BB  RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK
+3C  LESS-THAN 
+ 
+Buffer size send :  256 
+ 
+ 
+Sending packet seq num : 6 
+ 
+ Next packet seqnum : 7, base : 6, window_size : 5, base_window_size : 11 
+Last packet : 0 
+ 
+ Size read from file : 252 
+ 
+SEND 
+HEADER :  7,
+DATA : SIGN              BC  VULGAR FRACTION ONE QUARTER
+3D  EQUALS SIGN                 BD  VULGAR FRACTION ONE HALF
+3E  GREATER-THAN SIGN           BE  VULGAR FRACTION THREE QUARTERS
+3F  QUESTION MARK               BF  INVERTED QUESTION MARK
+40  COMMERCIAL 
+ 
+Buffer size send :  256 
+ 
+ 
+Sending packet seq num : 7 
+ 
+ Next packet seqnum : 8, base : 6, window_size : 5, base_window_size : 11 
+Last packet : 0 
+ 
+ Size read from file : 252 
+ 
+SEND 
+HEADER :  8,
+DATA : AT               C0  CAPITAL LETTER A WITH GRAVE
+41  CAPITAL LETTER A            C1  CAPITAL LETTER A WITH ACUTE
+42  CAPITAL LETTER B            C2  CAPITAL LETTER A WITH CIRCUMFLEX
+43  CAPITAL LETTER C            C3  CAPITAL LETTER A WITH TILDE
+44  CA
+ 
+Buffer size send :  256 
+ 
+ 
+Sending packet seq num : 8 
+ 
+ Next packet seqnum : 9, base : 6, window_size : 5, base_window_size : 11 
+Last packet : 0 
+ 
+ Size read from file : 252 
+ 
+SEND 
+HEADER :  9,
+DATA : PITAL LETTER D            C4  CAPITAL LETTER A WITH DIAERESIS
+45  CAPITAL LETTER E            C5  CAPITAL LETTER A WITH RING ABOVE
+46  CAPITAL LETTER F            C6  CAPITAL LETTER AE
+47  CAPITAL LETTER G            C7  CAPITAL LETTER C WITH CEDILLA
+4
+ 
+Buffer size send :  256 
+ 
+ 
+Sending packet seq num : 9 
+ 
+ Next packet seqnum : 10, base : 6, window_size : 5, base_window_size : 11 
+Last packet : 0 
+ 
+ Size read from file : 252 
+ 
+SEND 
+HEADER :  10,
+DATA : 8  CAPITAL LETTER H            C8  CAPITAL LETTER E WITH GRAVE
+49  CAPITAL LETTER I            C9  CAPITAL LETTER E WITH ACUTE
+4A  CAPITAL LETTER J            CA  CAPITAL LETTER E WITH CIRCUMFLEX
+4B  CAPITAL LETTER K            CB  CAPITAL LETTER E WIT
+ 
+Buffer size send :  256 
+ 
+ 
+Sending packet seq num : 10 
+ 
+ Next packet seqnum : 11, base : 6, window_size : 5, base_window_size : 11 
+Last packet : 0 
+ 
+ Size read from file : 252 
+ 
+SEND 
+HEADER :  11,
+DATA : H DIAERESIS
+4C  CAPITAL LETTER L            CC  CAPITAL LETTER I WITH GRAVE
+4D  CAPITAL LETTER M            CD  CAPITAL LETTER I WITH ACUTE
+4E  CAPITAL LETTER N            CE  CAPITAL LETTER I WITH CIRCUMFLEX
+4F  CAPITAL LETTER O            CF  CAPITAL
+ 
+Buffer size send :  256 
+ 
+ 
+Sending packet seq num : 11 
+ 
+ Next packet seqnum : 12, base : 6, window_size : 5, base_window_size : 11 
+Last packet : 0 
+ 
+ Check if there's any packet 
+ack num recv : 6 
+base updated : 7
+ack num recv : 7 
+base updated : 8
+ack num recv : 8 
+base updated : 9
+ack num recv : 9 
+base updated : 10
+ack num recv : 10 
+base updated : 11
+ack num recv : 11 
+base updated : 12
+Current seqnum :12 
+
+Timeout, will send packets from base : 12 to next_seqnum : 12 
+ 
+filesize remaining : 3349 , base : 12 
+ 
+Size read from file : 252 
+ 
+SEND 
+HEADER :  12,
+DATA :  LETTER I WITH DIAERESIS
+50  CAPITAL LETTER P            D0  CAPITAL LETTER ETH (Icelandic)
+51  CAPITAL LETTER Q            D1  CAPITAL LETTER N WITH TILDE
+52  CAPITAL LETTER R            D2  CAPITAL LETTER O WITH GRAVE
+53  CAPITAL LETTER S            
+ 
+Buffer size send :  256 
+ 
+ 
+Sending packet seq num : 12 
+ 
+ Next packet seqnum : 13, base : 12, window_size : 5, base_window_size : 17 
+Last packet : 0 
+ 
+ Size read from file : 252 
+ 
+SEND 
+HEADER :  13,
+DATA : D3  CAPITAL LETTER O WITH ACUTE
+54  CAPITAL LETTER T            D4  CAPITAL LETTER O WITH CIRCUMFLEX
+55  CAPITAL LETTER U            D5  CAPITAL LETTER O WITH TILDE
+56  CAPITAL LETTER V            D6  CAPITAL LETTER O WITH DIAERESIS
+57  CAPITAL LETTER 
+ 
+Buffer size send :  256 
+ 
+ 
+Sending packet seq num : 13 
+ 
+ Next packet seqnum : 14, base : 12, window_size : 5, base_window_size : 17 
+Last packet : 0 
+ 
+ Size read from file : 252 
+ 
+SEND 
+HEADER :  14,
+DATA : W            D7  MULTIPLICATION SIGN
+58  CAPITAL LETTER X            D8  CAPITAL LETTER O WITH STROKE
+59  CAPITAL LETTER Y            D9  CAPITAL LETTER U WITH GRAVE
+5A  CAPITAL LETTER Z            DA  CAPITAL LETTER U WITH ACUTE
+5B  LEFT SQUARE BRACKE
+ 
+Buffer size send :  256 
+ 
+ 
+Sending packet seq num : 14 
+ 
+ Next packet seqnum : 15, base : 12, window_size : 5, base_window_size : 17 
+Last packet : 0 
+ 
+ Size read from file : 252 
+ 
+SEND 
+HEADER :  15,
+DATA : T         DB  CAPITAL LETTER U WITH CIRCUMFLEX
+5C  REVERSE SOLIDUS             DC  CAPITAL LETTER U WITH DIAERESIS
+5D  RIGHT SQUARE BRACKET        DD  CAPITAL LETTER Y WITH ACUTE
+5E  CIRCUMFLEX ACCENT           DE  CAPITAL LETTER THORN (Icelandic)
+5F  
+ 
+Buffer size send :  256 
+ 
+ 
+Sending packet seq num : 15 
+ 
+ Next packet seqnum : 16, base : 12, window_size : 5, base_window_size : 17 
+Last packet : 0 
+ 
+ Size read from file : 252 
+ 
+SEND 
+HEADER :  16,
+DATA : LOW LINE                    DF  SMALL LETTER SHARP S (German)
+60  GRAVE ACCENT                E0  SMALL LETTER A WITH GRAVE
+61  SMALL LETTER A              E1  SMALL LETTER A WITH ACUTE
+62  SMALL LETTER B              E2  SMALL LETTER A WITH CIRCUMFLEX
+ 
+Buffer size send :  256 
+ 
+ 
+Sending packet seq num : 16 
+ 
+ Next packet seqnum : 17, base : 12, window_size : 5, base_window_size : 17 
+Last packet : 0 
+ 
+ Size read from file : 252 
+ 
+SEND 
+HEADER :  17,
+DATA : 
+63  SMALL LETTER C              E3  SMALL LETTER A WITH TILDE
+64  SMALL LETTER D              E4  SMALL LETTER A WITH DIAERESIS
+65  SMALL LETTER E              E5  SMALL LETTER A WITH RING ABOVE
+66  SMALL LETTER F              E6  SMALL LETTER AE
+67  
+ 
+Buffer size send :  256 
+ 
+ 
+Sending packet seq num : 17 
+ 
+ Next packet seqnum : 18, base : 12, window_size : 5, base_window_size : 17 
+Last packet : 0 
+ 
+ Check if there's any packet 
+ack num recv : 12 
+base updated : 13
+ack num recv : 13 
+base updated : 14
+ack num recv : 14 
+base updated : 15
+ack num recv : 15 
+base updated : 16
+ack num recv : 16 
+base updated : 17
+ack num recv : 17 
+base updated : 18
+Current seqnum :18 
+
+Timeout, will send packets from base : 18 to next_seqnum : 18 
+ 
+filesize remaining : 1837 , base : 18 
+ 
+Size read from file : 252 
+ 
+SEND 
+HEADER :  18,
+DATA : SMALL LETTER G              E7  SMALL LETTER C WITH CEDILLA
+68  SMALL LETTER H              E8  SMALL LETTER E WITH GRAVE
+69  SMALL LETTER I              E9  SMALL LETTER E WITH ACUTE
+6A  SMALL LETTER J              EA  SMALL LETTER E WITH CIRCUMFLEX
+6
+ 
+Buffer size send :  256 
+ 
+ 
+Sending packet seq num : 18 
+ 
+ Next packet seqnum : 19, base : 18, window_size : 5, base_window_size : 23 
+Last packet : 0 
+ 
+ Size read from file : 252 
+ 
+SEND 
+HEADER :  19,
+DATA : B  SMALL LETTER K              EB  SMALL LETTER E WITH DIAERESIS
+6C  SMALL LETTER L              EC  SMALL LETTER I WITH GRAVE
+6D  SMALL LETTER M              ED  SMALL LETTER I WITH ACUTE
+6E  SMALL LETTER N              EE  SMALL LETTER I WITH CIRCUMF
+ 
+Buffer size send :  256 
+ 
+ 
+Sending packet seq num : 19 
+ 
+ Next packet seqnum : 20, base : 18, window_size : 5, base_window_size : 23 
+Last packet : 0 
+ 
+ Size read from file : 252 
+ 
+SEND 
+HEADER :  20,
+DATA : LEX
+6F  SMALL LETTER O              EF  SMALL LETTER I WITH DIAERESIS
+70  SMALL LETTER P              F0  SMALL LETTER ETH (Icelandic)
+71  SMALL LETTER Q              F1  SMALL LETTER N WITH TILDE
+72  SMALL LETTER R              F2  SMALL LETTER O WITH
+ 
+Buffer size send :  256 
+ 
+ 
+Sending packet seq num : 20 
+ 
+ Next packet seqnum : 21, base : 18, window_size : 5, base_window_size : 23 
+Last packet : 0 
+ 
+ Size read from file : 252 
+ 
+SEND 
+HEADER :  21,
+DATA :  GRAVE
+73  SMALL LETTER S              F3  SMALL LETTER O WITH ACUTE
+74  SMALL LETTER T              F4  SMALL LETTER O WITH CIRCUMFLEX
+75  SMALL LETTER U              F5  SMALL LETTER O WITH TILDE
+76  SMALL LETTER V              F6  SMALL LETTER O WIT
+ 
+Buffer size send :  256 
+ 
+ 
+Sending packet seq num : 21 
+ 
+ Next packet seqnum : 22, base : 18, window_size : 5, base_window_size : 23 
+Last packet : 0 
+ 
+ Size read from file : 252 
+ 
+SEND 
+HEADER :  22,
+DATA : H DIAERESIS
+77  SMALL LETTER W              F7  DIVISION SIGN
+78  SMALL LETTER X              F8  SMALL LETTER O WITH STROKE
+79  SMALL LETTER Y              F9  SMALL LETTER U WITH GRAVE
+7A  SMALL LETTER Z              FA  SMALL LETTER U WITH ACUTE
+7B 
+ 
+Buffer size send :  256 
+ 
+ 
+Sending packet seq num : 22 
+ 
+ Next packet seqnum : 23, base : 18, window_size : 5, base_window_size : 23 
+Last packet : 0 
+ 
+ Size read from file : 252 
+ 
+SEND 
+HEADER :  23,
+DATA :  LEFT CURLY BRACKET          FB  SMALL LETTER U WITH CIRCUMFLEX
+7C  VERTICAL LINE               FC  SMALL LETTER U WITH DIAERESIS
+7D  RIGHT CURLY BRACKET         FD  SMALL LETTER Y WITH ACUTE
+7E  TILDE                       FE  SMALL LETTER THORN (Icel
+ 
+Buffer size send :  256 
+ 
+ 
+Sending packet seq num : 23 
+ 
+ Next packet seqnum : 24, base : 18, window_size : 5, base_window_size : 23 
+Last packet : 0 
+ 
+ Check if there's any packet 
+ack num recv : 18 
+base updated : 19
+ack num recv : 19 
+base updated : 20
+ack num recv : 20 
+base updated : 21
+ack num recv : 21 
+base updated : 22
+ack num recv : 22 
+base updated : 23
+ack num recv : 23 
+base updated : 24
+Current seqnum :24 
+
+Timeout, will send packets from base : 24 to next_seqnum : 24 
+ 
+filesize remaining : 325 , base : 24 
+ 
+Size read from file : 73 
+ 
+Should be end packet 
+SEND 
+HEADER :  24,
+DATA : andic)
+                                FF  SMALL LETTER Y WITH DIAERESIS
+
+ 
+Buffer size send :  77 
+ 
+ 
+Sending packet seq num : 24 
+ 
+ Next packet seqnum : 25, base : 24, window_size : 5, base_window_size : 29 
+Last packet : 1 
+ 
+ Check if there's any packet 
+ack num recv : 24 
+base updated : 25
+Current seqnum :25 
+
+Timeout, will send packets from base : 25 to next_seqnum : 25 
+ 
+filesize remaining : 73 , base : 25 
+ 

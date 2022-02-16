@@ -1,0 +1,111 @@
+Assignment 1 Computer Networks:
+
+Task 1:
+
+1.) Sent an email to sice-networks-l@list.indiana.edu.
+
+2.) Smtp terminal dump:
+
+
+umasharm@silo:~$ telnet mail-relay.iu.edu 25
+Trying 134.68.220.47...
+Connected to mail-relay.iu.edu.
+Escape character is '^]'.
+220 Sendmail ESMTP - IU Campus Communications Team - Mail-Relay
+HELO 10.0.0.35
+250 mail-relay.iu.edu Hello silo.luddy.indiana.edu [129.79.247.195], pleased to meet you
+MAIL FROM:<umasharm@iu.edu>
+250 2.1.0 <umasharm@iu.edu>... Sender ok
+RCPT TO:<sice-networks-l@list.indiana.edu>
+250 2.1.5 <sice-networks-l@list.indiana.edu>... Recipient ok
+DATA
+354 Enter mail, end with "." on a line by itself
+To: sice-networks-l@list.indiana.edu
+From: umasharm@iu.edu
+Subject: "Umang Sharma Assignment 01 SMTP"
+.
+250 2.0.0 18A5hhXf024328 Message accepted for delivery
+QUIT
+221 2.0.0 mail-relay.iu.edu closing connection
+Connection closed by foreign host.
+
+
+
+
+
+
+
+3.)(a)
+
+Sending to a outside address:
+
+umasharm@silo:~$ telnet mail-relay.iu.edu 25
+Trying 129.79.1.38...
+Connected to mail-relay.iu.edu.
+Escape character is '^]'.
+220 Sendmail ESMTP - IU Campus Communications Team - Mail-Relay
+HELO 10.0.0.35
+250 mail-relay.iu.edu Hello silo.luddy.indiana.edu [129.79.247.195], pleased to meet you
+MAIL FROM:umasharm@iu.edu
+250 2.1.0 umasharm@iu.edu... Sender ok
+RCPT TO: umangmsharma@gmail.com
+550 5.7.1 umangmsharma@gmail.com... Relaying denied. Proper authentication required.
+Connection closed by foreign host.
+
+Answer: The email won’t be sent to a non IU email address.
+
+Explanation: The main problem with sending emails to outside of IU email is that IU servers require you to always connect to the internet through the ISP that provides the server but outside email address server requires more authentication. The server responds with error 550 since the recipient email address is not deliverable as it’s ISP is not same as silo server and the outside email server requires more authentication!
+
+
+3.)(b)
+
+Sending from a made up address
+
+umasharm@silo:~$ telnet mail-relay.iu.edu 25
+Trying 134.68.220.47...
+Connected to mail-relay.iu.edu.
+Escape character is '^]'.
+220 Sendmail ESMTP - IU Campus Communications Team - Mail-Relay
+HELO 10.0.0.35
+250 mail-relay.iu.edu Hello silo.luddy.indiana.edu [129.79.247.195], pleased to meet you
+MAIL FROM:<JustforTask1@cisco_yahoo.com>
+250 2.1.0 <JustforTask1@cisco_yahoo.com>... Sender ok
+RCPT TO: <umasharm@iu.edu>
+553 5.1.8 <umasharm@iu.edu>... Domain of sender address JustforTask1@cisco_yahoo.com does not exist
+
+
+ 553  Requested action not taken: mailbox name not allowed (e.g.,
+      mailbox syntax incorrect)
+
+
+Explanation:
+
+THe server checks for the domain name of the sender address, hence gives this error 553 that the domain of sender address does not exist!
+
+
+
+(II)
+
+220 Sendmail ESMTP - IU Campus Communications Team - Mail-Relay
+HELO 10.0.0.35
+250 mail-relay.iu.edu Hello silo.luddy.indiana.edu [129.79.247.195], pleased to meet you
+MAIL FROM: <JustforTask1@iu.edu>    
+250 2.1.0 <JustforTask1@iu.edu>... Sender ok
+RCPT TO: <umasharm@iu.edu>
+250 2.1.5 <umasharm@iu.edu>... Recipient ok
+DATA 
+354 Enter mail, end with "." on a line by itself
+Subject: This is from JustforTask1@iu.edu 
+This would be absurd if you receive it!
+.
+250 2.0.0 18A6DAJm013180 Message accepted for delivery
+quit
+221 2.0.0 mail-relay.iu.edu closing connection
+Connection closed by foreign host.
+umasharm@silo:~$ 
+
+Explanation:
+
+The server doesn’t checks “from” mail address if domain name is fine and doesn’t has an authentication for a valid email address, only for a valid domain name.
+
+Conclusion for 3(b) : The email is sent if the domain name is a valid one sine the server only validates the domain name, but if the domain is not a valid one like “cisco_yahoo.com", the email is not sent and returns an error 553 that the domain doesn’t exists.

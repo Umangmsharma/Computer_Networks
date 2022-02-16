@@ -1,0 +1,528 @@
+diff --git a/src/Makefile b/src/Makefile
+index 52b3421..a43b4f8 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -4,7 +4,7 @@ CFLAGS       = -O2 -Wall -Werror -pedantic -std=gnu99 -pthread
+ 
+ #set the following variables for custom libraries and/or other objects
+ EXTOBJS      =
+-LIBS         = -lm -lpthread -no-pie
++LIBS         = -lm -lpthread 
+ LIBPATHS     = 
+ INCLUDEPATHS =
+ ARCHIVE      = sock.a
+diff --git a/src/stopandwait.c b/src/stopandwait.c
+index 5af3482..503982d 100644
+--- a/src/stopandwait.c
++++ b/src/stopandwait.c
+@@ -14,6 +14,7 @@
+ #include <pthread.h>
+ #include <fcntl.h>
+ #include <sys/stat.h>
++#include <stdbool.h>
+ 
+ 
+ 
+@@ -21,103 +22,56 @@
+ #define SERVER_PORT 6767
+ #define MAX 256
+ #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
+-#define UNUSED(x) (void)(x)
+-
+-/* This flag controls termination of the main loop. */
+-volatile sig_atomic_t keep_going = 1;
+ 
+ typedef struct message_file
+-{
++{  
++   char end_msg;
+    char header[9];
+-   char file_data[247];
++   char file_data[246];
+ } message;
+ 
+ bool read_rudpfile(int sock, FILE *f)
+ {
++	struct sockaddr_in remote_addr ;
+ 	long filesize = 0;
+-	char buffer[MAX];
+-	char ack_buffer[MAX];
++	char buffer[MAX], ack_buffer[MAX];
+ 	int recvd = 0;
+- 	struct sockaddr_in remote_addr ;
++	int ack_num = 0;
++
+ 	int buflen = sizeof(ack_buffer);
+ 
+-	int num =  sizeof(buffer);
+-	int ack_num = 0, end_size =0,times_sent = 0;
+-    	struct timeval timeout;      
+-        message recv_msg;
++	message recv_msg;
+ 
+-	printf("going to read now in buffer size : %d \n", num);
+-	bzero(recv_msg.header, sizeof(recv_msg.header));
+-	bzero(recv_msg.file_data, sizeof(recv_msg.file_data));
+-	bzero(buffer, sizeof(buffer));
++
++	int num =  sizeof(buffer);
+ 
+ 	while((recvd = recvfrom(sock, buffer,
+ 			MAX, 0, (struct sockaddr *)&remote_addr,
+ 			(socklen_t* )&num)) > -1)
+ 	{
+-	    printf("Received a message, size : %d \n", recvd );
+ 		
+-	    if(strncmp((const char*)buffer, "END",3) == 0) {
+-
+-		/* Handling end game  */
+-		printf("Got 'END' recvd_bytes : %d \n", recvd);
+-	 	snprintf(ack_buffer, buflen,
+-            			 "AckEND");
+-
+-    		timeout.tv_sec = 5;
+-   		timeout.tv_usec = 0;
+-
+-	       do
+-		{
+-		/* handling ending scenario */
+-	 	 printf("Sending ack : %s\n", ack_buffer);
+-
+-		
+-    		if(setsockopt (sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout,
+-        			        sizeof(timeout)) < 0) {
+-       		 perror("setsockopt failed\n");	
+-		 }
+-
+-		 int num = sendto(sock, ack_buffer, buflen, 0, (struct sockaddr*)&remote_addr, sizeof(remote_addr));
+-	 	 if (num == -1)
+-       	 	{
+-          	  return false;
+-       	 	}
+-		
+-		times_sent ++;
+-		end_size = recvfrom(sock, buffer,
+-			MAX, 0, (struct sockaddr *)&remote_addr,
+-			(socklen_t* )&num);
+-
+-		if(end_size > 0 || times_sent == 4){
+-			printf("ack to ack buff : %s  recvd, close the server \n", buffer);
+-			close(sock);
+-			exit(0);
+-		 }
+-		}while(end_size <=0);	
+-	     }
+-
+ 	     bzero(recv_msg.header, sizeof(recv_msg.header));
+-	     bzero(recv_msg.file_data, sizeof(recv_msg.file_data));
++             bzero(recv_msg.file_data, sizeof(recv_msg.file_data));
+ 
+              memcpy(&recv_msg, buffer, sizeof(buffer));
+ 
+-             printf("received message the header : %s , data : %s\n", recv_msg.header, recv_msg.file_data);
++             printf("RECEIVED :\n header : %s ,\n  data : %s \n \n", recv_msg.header, recv_msg.file_data);
+ 
+-     	    const char s[4] = ":";
+-	    char *token;
++	    const char s[4] = ":";
++            char *token;
+ 
+-	    token = strtok(recv_msg.header,s);
+-	    if (strcmp(token, "SeqNum") == 0) 
+-	   { 
+-		token = strtok(NULL, s);
+-		printf("seq num recv : %d \n",atoi(token));
+-	 	ack_num = atoi(token);
+-	   }
+-	
++            token = strtok(recv_msg.header,s);
++            if (strcmp(token, "SeqNum") == 0)
++           {
++                token = strtok(NULL, s);
++                printf("seq num recv : %d \n \n",atoi(token));
++                ack_num = atoi(token);
++           }
++ 
+ 	    int offset = 0;
+-	/* since recvd buffer contains seqnum , which shouldn't be written to file */
+-	    recvd = recvd - sizeof(recv_msg.header);
++
++	      /* since recvd buffer contains seqnum , which shouldn't be written to file */
++            recvd = recvd - sizeof(recv_msg.header) - sizeof(recv_msg.end_msg);
+ 	    printf("will write %d bytes in file now \n", recvd);
+ 	    do
+ 	    {
+@@ -128,41 +82,53 @@ bool read_rudpfile(int sock, FILE *f)
+ 	    }
+ 	    while (offset < recvd);
+ 
+-	    filesize -= (recvd - sizeof(recv_msg.header));
++	    filesize -= (recvd) - sizeof(recv_msg.header) - sizeof(recv_msg.end_msg);
++
+ 	    bzero(buffer, MAX);
+-	    bzero(recv_msg.header, sizeof(recv_msg.header));
+-	    bzero(recv_msg.file_data, sizeof(recv_msg.file_data));
++            bzero(recv_msg.header, sizeof(recv_msg.header));
++            bzero(recv_msg.file_data, sizeof(recv_msg.file_data));
+ 
+ 
+             snprintf(ack_buffer, buflen,
+-            		 "AckSeq:%d",ack_num);
++                         "AckSeq:%d",ack_num);
+ 
+-	    printf("sending ack : %s\n", ack_buffer);
++            printf("sending ack : %s\n \n ", ack_buffer);
+ 
+-	  int num = sendto(sock, ack_buffer, buflen, 0, (struct sockaddr*)&remote_addr, sizeof(remote_addr));
+-	  if (num == -1)
+-       	 {
++          int num = sendto(sock, ack_buffer, buflen, 0, (struct sockaddr*)&remote_addr, sizeof(remote_addr));
++          if (num == -1)
++         {
+             return false;
+-       	 }
++         }
++
++	  printf("flag : %c\n", recv_msg.end_msg);
++	  if(recv_msg.end_msg > 'N') {
+ 
++		printf("This was the last msg, so closing down \n");
++		close(sock);
++		exit(0);
++	
+ 	}
++      }
+ 
+     return true;
+ }
+ 
++
+ /*
+  *  Here is the starting point for your netster part.1 definitions. Add the 
+  *  appropriate comment header as defined in the code formatting guidelines
+  */
+ 
+ /* Add function definitions */
++
+ void stopandwait_server(char* iface, long port, FILE* fp) {
+ 
+-		/* Take the UDP code path */
++	
++                /* Take the UDP code path */
+      struct sockaddr_in serv_addr;
+      int u_sockfd = -1;
+ 
+-    UNUSED(iface);
++ //   UNUSED(iface);
+     printf("in stop and wait server updated\n");
+ 
+     u_sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+@@ -187,17 +153,17 @@ void stopandwait_server(char* iface, long port, FILE* fp) {
+ 
+     if (!ok)
+     {
+-	printf("error read");
++        printf("error read");
+     }
+ 
+     close(u_sockfd);
+     exit(0);
++
+ }
+ 
+ bool send_rudpdata(int sock,struct sockaddr_in servaddr, void *buf, int buflen)
+ {
+     unsigned char *pbuf = (unsigned char *) buf;
+-    printf("send rudp data \n");
+ 
+     while (buflen > 0)
+     {
+@@ -207,7 +173,7 @@ bool send_rudpdata(int sock,struct sockaddr_in servaddr, void *buf, int buflen)
+             return false;
+         }
+ 
+-	printf("buff sent : %s\n", pbuf);
++//	printf("buff sent : %s", pbuf);
+         pbuf += num;
+         buflen -= num;
+     }
+@@ -220,193 +186,122 @@ bool send_rudpfile(int sock, struct sockaddr_in servaddr, FILE *f)
+     fseek(f, 0, SEEK_END);
+     long filesize = ftell(f);
+     rewind(f);
+-    int packet_sent = 1, r=0, Seq_num = 0, Ack_num = 0, recvd =0, end_ack_count =0 ;
+-    char end_buffer[MAX];
+-    char buffer[MAX];
+ 
+-    message msg; 
+-    struct timeval timeout;      
+-    timeout.tv_sec = 1;
++    message msg;
++    char ack_buffer[MAX];
++    bool packet_acked = true;
++    int Seq_num = 0, Ack_num = 0, send_bytes = 0, recvd = 0;
++
++    struct timeval timeout;
++    timeout.tv_sec = 2;
+     timeout.tv_usec = 0;
+-     size_t num ;
+ 
+-     struct timeval last;
+-     socklen_t lastlen = sizeof(last);
++    struct timeval last;
++    socklen_t lastlen = sizeof(last);
++	
++    msg.end_msg = 'N';
+ 
+ 
+     if (setsockopt (sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout,
+                 sizeof(timeout)) < 0)
+-        perror("setsockopt failed\n");	
++        perror("setsockopt failed\n");
+ 
+ 
+-    r = getsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &last, &lastlen);
++    int r = getsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &last, &lastlen);
+         if (r < 0) return r;
+ 
+-    if (r == 0) { printf("socket option for RCVTIMOUT was set \n"); }
++  //  if (r == 0) { printf("socket option for RCVTIMOUT was set \n"); }
+ 
+-    printf("send rudp file of size : %ld, msg size : %lu , header size : %lu , file size : %lu, buff size : %lu \n", filesize, sizeof(msg), sizeof(msg.header), sizeof(msg.file_data), sizeof(buffer));
++    printf("filsize to be sent : %ld \n, intial end msg flag : %c ", filesize, msg.end_msg); 
++    printf("Buffer size  : %ld, \n data size : %lu , \n header size : %lu \n end flag size : %zu  \n\n", sizeof(msg), sizeof(msg.file_data), sizeof(msg.header), sizeof(msg.end_msg)); 
+ 
+     if (filesize == EOF)
+         return false;
+ 
+     if (filesize > 0)
+     {
+-        char recv_buffer[MAX];
++        char buffer[MAX];
+         do
+         {
++	    bzero(msg.header, sizeof(msg.header));
++		
++   	    snprintf(msg.header, sizeof(msg.header),	
++			             "SeqNum:%d",Seq_num);
++	     
++	    bzero(msg.file_data, sizeof(msg.file_data));
+ 
+-         bzero(msg.header, sizeof(msg.header));
+-	 snprintf(msg.header, sizeof(msg.header),
+-             "SeqNum:%d",Seq_num);
+-	 int i = 0;
+-	
+-	while(msg.header[i] != '\0'){ i++;}
+-	printf("seq num buffer size : %d , buffer %s\n",i, msg.header);
+-	    
+-           num =  sizeof(msg.file_data) - 1;
+-	   printf("attempting to read %zu bytes from file  \n", num);
+-           bzero(msg.file_data, sizeof(msg.file_data));
+-
+-           num = fread(msg.file_data, 1, num, f);
+-           if (num < 1)
+-           {
+-		 printf("file bytes finished, returning\n");
+-		 return false;
+-	   }
+ 
+-	printf(" File data attempting to send  %s \n", msg.file_data);
++            size_t num =  sizeof(msg.file_data);
++            num = fread(msg.file_data, 1, num, f);
++            if (num < 1)
++                return false;
+ 
+-	/* this do while shall ensure a packet is sent and acked */
+-	do
+-	{
+-	packet_sent = 1;
+-	/* send a packet first and wait for it's ack */
+-	     memcpy(buffer, &msg, sizeof(message));
+-	     message copy_data;
+-	     memcpy(&copy_data, buffer, sizeof(message));
++	    printf("Size read from file : %zu \n \n", num);
++            
++	    if((num)  < sizeof(msg.file_data)) {
++		printf("Should be end packet \n ");	
++		msg.end_msg = 'Y';
++	    }	  
+ 
+-  	     printf("SEND the header : %s , data : %s\n", copy_data.header, copy_data.file_data);
+-  	     printf("SEND size : %ld \n", num+sizeof(msg.header));
++	    send_bytes = num + sizeof(msg.header) + sizeof(msg.end_msg);
++	    printf(" SEND \n HEADER :  %s,\n DATA : %s : \n \n Buffer size send :  %d \n \n \n", msg.header, msg.file_data, send_bytes);
+ 
+-            if (!send_rudpdata(sock, servaddr,  buffer, num + sizeof(msg.header)))
+-               { 
+-		        printf("sending rudp data failed \n");
+-			return false;
+-	       }
++	    bzero(buffer, MAX);
++	    memcpy(buffer, &msg, sizeof(message));
++  		
++	do
++	{
++		
++	    printf("Sending packet \n \n ");
++            if (!send_rudpdata(sock, servaddr,  buffer, send_bytes))
++                return false;
+ 
+-    	     int recv_size =  sizeof(recv_buffer);
++	    int recv_size =  sizeof(ack_buffer);
+ 
+-    	    while( (recvd = recvfrom(sock, recv_buffer,
++	    bzero(ack_buffer, MAX);
++	    if((recvd = recvfrom(sock, ack_buffer,
+                         MAX, 0, (struct sockaddr *)&servaddr,
+-                        (socklen_t* )&recv_size) ) > 0) 
+-	    {
++                        (socklen_t* )&recv_size))  > 0){
+ 
+-		/* cancel the timer and the outer do while loop */
+-   	    	 printf("ack received  : %s \n", recv_buffer);
+-	    	 const char s[4] = ":";
+-   		 char *token;
++		 printf("ack received  : %s \n", ack_buffer);
++                 const char s[4] = ":";
++                 char *token;
+ 
+-   		 token = strtok(recv_buffer,s);
+-		 if (strcmp(token, "AckSeq") == 0) 
+-		 { 
+-			token = strtok(NULL, s);
+-			printf("ack num recv : %d \n",atoi(token));
++                 token = strtok(ack_buffer,s);
++                 if (strcmp(token, "AckSeq") == 0)
++                 {
++                        token = strtok(NULL, s);
++                        printf("ack num recv : %d \n",atoi(token));
+ 
+-	       	 }
++                 }
+ 
+-		Ack_num = atoi(token);
++                Ack_num = atoi(token);
+ 
+-		if(Ack_num != Seq_num){
+-			printf("Possibly duplicate packet recvd , discard it and try to recv again \n");
+-			continue;
+-		} 	
+-
+-		 keep_going = 0;
+-		 packet_sent = 0;
+-		 printf("Packet correctly ACKed, reading next from file and sending \n");
+-		 break ;
+-	    }
+-	   printf("Either the packet was acked correctly or nothing was read during timeout, depends on packet_sent : %d \n", packet_sent);
+-	} while(packet_sent);
+-
+-	    Seq_num = !Seq_num;
+-            filesize -= num;
+-            printf("filesize remaining : %ld , next seqnum : %d \n",filesize, Seq_num);	    
++                if(Ack_num == Seq_num){
++                        printf("Packet ACKED \n");
++                        packet_acked = true;
++                }
++	     }
+         }
+-        while (filesize > 0);
+-    
++        while (packet_acked == false);
+ 
+-  packet_sent = 1;
+-  const char *tmp = "END";
+-  /* for terminating the server, send "END" */
+-  memset(end_buffer, 0, sizeof end_buffer);
+-  strncpy(end_buffer, tmp, sizeof end_buffer - 1);
+-  memset(recv_buffer, 0, sizeof end_buffer);
++	packet_acked = false;
++	Seq_num = 1 - Seq_num;
++        filesize -= num;
+ 
+-  do
+-    {
+-   /* to close the server */
+-	
+-    if(sendto(sock, end_buffer, MAX, 0, (struct sockaddr*)&servaddr, sizeof(servaddr)) == -1) {
+-      perror("[ERROR] sending data to the server.");
+-      exit(1);
+-    }
+-
+-    printf("Ending client buff sent : %s\n", end_buffer);
++    } while (filesize > 0);
+ 
+-    num =  sizeof(end_buffer);
+-    int recvd = recvfrom(sock, recv_buffer,
+-		MAX, 0, (struct sockaddr *)&servaddr,
+-		(socklen_t* )&num);
+-
+-    if(((recvd < 0) && strcmp(end_buffer, "Ack_AckEND") == 0)) { 
+-	
+-	printf("nothing read\n");
+-	if(end_ack_count < 4){
+-		end_ack_count ++;
+-		continue;
+-	} else {
+-	  	printf("Tried my best to send Ack_AckEND,hopefully server got it,  I am closing down \n");
+-		packet_sent = 0; 
+-		break;
+-	}
+-   } else if(recvd < 0) { 
+-	printf("nothing read\n");
+-	continue; 
+-   } else {
+-	 printf("ack received  : %s \n", recv_buffer);
+-	
+-	if (strcmp(recv_buffer, "AckEND") == 0) 
+-  	{
+-		const char *tmp = "Ack_AckEND";
+- 		 /* for terminating the server, send "END" */
+- 	 	memset(end_buffer, 0, sizeof end_buffer);
+- 	      	strncpy(end_buffer, tmp, sizeof end_buffer - 1);
+- 		memset(recv_buffer, 0, sizeof end_buffer);
+-		continue;
+-	}
+-	
+-	 printf("ack received  : %s, Handshake completed, end the client \n", recv_buffer);
+-	/* canncel outer do while loop, this packet is acked, do not need to resend */
+-	 packet_sent = 0;
+    }
+ 
+-    bzero(recv_buffer, MAX);
+-  } while(packet_sent);
+-
+-    bzero(end_buffer, MAX);
+- }
+-
+     return true;
+ }
+ 
+ void stopandwait_client(char* host, long port, FILE* fp) {
+-
+-    int f_sockfd,res =0;
++        int f_sockfd;
+     char send_buff[MAX],buffer[MAX];
+     struct sockaddr_in     servaddr;
++    int res = 0;
+   
+-    printf("in rudp client \n");
+     // Creating socket file descriptor
+     if ( (f_sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
+         perror("socket creation failed\n");
+@@ -420,7 +315,6 @@ void stopandwait_client(char* host, long port, FILE* fp) {
+     // Filling server information
+     servaddr.sin_family = AF_INET;
+     servaddr.sin_port = htons(port);
+-   // servaddr.sin_addr.s_addr = INADDR_ANY;
+     res = inet_pton(AF_INET, host,
+                     &(servaddr.sin_addr));
+     if (res != 1) {
+@@ -436,6 +330,7 @@ void stopandwait_client(char* host, long port, FILE* fp) {
+   
+     send_rudpfile(f_sockfd, servaddr, fp);
+ 
++
+    close(f_sockfd);     
+    exit(0);
+ }

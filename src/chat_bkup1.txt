@@ -1,0 +1,163 @@
+#include<stdio.h>
+#include <sys/socket.h>
+#include "chat.h"
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include<stdlib.h>
+#include <stdint.h>
+#include <string.h>
+#include <signal.h>
+#include<stdbool.h>
+#include <netinet/tcp.h>
+#include <unistd.h>
+
+
+#define MAX 80
+/*
+ *  Here is the starting point for your netster part.1 definitions. Add the 
+ *  appropriate comment header as defined in the code formatting guidelines
+ */
+
+/* Add function definitions */
+void chat_server(char* iface, long port, int use_udp) {
+    printf("Hello client, I am your server\n");
+     int sockfd, connfd, len;
+    struct sockaddr_in servaddr, cli;
+    int optval = true;
+    char buff[MAX];
+
+  
+    // socket create and verification
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd == -1) {
+        printf("socket creation failed...\n");
+        exit(0);
+    }
+    else
+        printf("Socket successfully created..\n");
+    bzero(&servaddr, sizeof(servaddr));
+
+    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval,
+                         sizeof(optval))) {
+    printf("REUSEADDR set\n");
+    }
+  
+    // assign IP, PORT
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    servaddr.sin_port = htons(port);
+ 
+
+     int num_conn = 0;
+    // Binding newly created socket to given IP and verification
+    if ((bind(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr))) != 0) {
+        printf("socket bind failed...\n");
+        exit(0);
+    }
+    else
+        printf("Socket successfully binded..\n");
+  
+    // Now server is ready to listen and verification
+    if ((listen(sockfd, 5)) != 0) {
+        printf("Listen failed...\n");
+        exit(0);
+    }     
+    else
+        printf("Server listening..\n");
+    len = sizeof(cli);
+
+    // Accept the data packet from client and verification
+    connfd = accept(sockfd, (struct sockaddr *)&cli, &len);
+    if (connfd < 0) {
+        printf("server acccept failed...\n");
+        exit(0);
+    }
+    else
+        printf("Connection %d from host_ip:  port: %lu\n", ++num_conn, port);
+
+    printf("LOG\n");
+  //  fd_set rset;
+  //  FD_SET(connfd, &rset);
+
+
+    printf("LOG1\n");
+    bzero(buff, MAX); 
+   
+    printf("LOG2, entering while\n");
+    while(1) {
+        printf("In while ");
+        if((read(connfd, buff, sizeof(buff))) > 0){
+        // print buffer which contains the client contents
+       		printf("got message from (port %lu)  %s: %s\t : ", buff);
+     		if(strncmp(buff,"hello",5) == 0) {
+                         int n = 0;
+                         while ((buff[n++] = getchar()) != '\n');
+                         write(connfd, buff, sizeof(buff));
+        	       	printf("this should be the exit");
+        //		break;
+       		 } else  if(strncmp(buff,"Goodbye",7) == 0) {
+                        printf("Ending this connection with farewell since client said goodbye ");
+                         int n = 0;
+                         while ((buff[n++] = getchar()) != '\n');
+                         write(connfd, buff, sizeof(buff));
+                        printf("Ending this connection since client said goodbye ");
+    			close(connfd);
+                         // Accept the data packet from client and verification
+		    connfd = accept(sockfd, (struct sockaddr *)&cli, &len);
+		    if (connfd < 0) {
+			printf("server acccept failed...\n");
+			exit(0);
+		    }
+		    else
+			printf("Connection %d from host_ip:  port: %lu\n", num_conn, port);
+					break;
+				 }   	
+			 }
+	    }
+}
+
+void chat_client(char* host, long port, int use_udp) {
+  
+    printf("Hello server, I am your client\n");
+
+     int sockfd, connfd;
+    struct sockaddr_in servaddr, cli;
+    char buff[MAX];
+  
+    // socket create and varification
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd == -1) {
+        printf("socket creation failed...\n");
+        exit(0);
+    }
+    else
+        printf("Socket successfully created..\n");
+    bzero(&servaddr, sizeof(servaddr));
+  
+    // assign IP, PORT
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    servaddr.sin_port = htons(port);
+  
+    // connect the client socket to server socket
+    if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) != 0) {
+        printf("connection with the server failed...\n");
+        exit(0);
+    }
+    else
+        printf("connected to the server..\n");
+
+      bzero(buff, sizeof(buff));
+        
+      while(1){   
+         printf("Enter the string : ");
+        int n = 0;
+        while ((buff[n++] = getchar()) != '\n')
+            ;
+        write(sockfd, buff, sizeof(buff));
+        if((read(sockfd, buff, sizeof(buff))) > 0){
+        // print buffer which contains the client contents
+                printf("Message received from server: %s\t : ", buff);
+        }        
+ }
+}

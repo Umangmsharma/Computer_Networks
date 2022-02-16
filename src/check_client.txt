@@ -1,0 +1,31 @@
+Hello, I am a client
+should be gbn client 
+gbn clientfilsize to be sent : 144 
+Intial end msg flag : N 
+Buffer size  : 256, 
+data size : 253 , 
+header size : 2 
+end flag size : 1  
+
+base : 0, next_seqsum : 0 , window size : 5 
+ 
+Size read from file : 144 
+ 
+Should be end packet 
+SEND 
+HEADER :  0,
+DATA : hello there , the dreamers of this world. This is from a dreamer in the world to the other dreamers in the world. How are you guys doing today?
+
+ 
+Buffer size send :  147 
+ 
+ 
+Sending packet seq num : 0 
+ 
+ Next packet seqnum : 1, last packet : 1 
+ 
+ Check if there's any packet 
+ack num recv : 0 
+base updated : 1
+Current seqnum :1 
+filesize remaining : -109 , base : 1 

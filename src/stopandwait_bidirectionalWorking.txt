@@ -1,0 +1,257 @@
+#include<stdio.h>
+#include <sys/socket.h>
+#include "chat.h"
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include<stdlib.h>
+#include <stdint.h>
+#include <string.h>
+#include <signal.h>
+#include<stdbool.h>
+#include <netinet/tcp.h>
+#include <unistd.h>
+#include <errno.h>
+#include <pthread.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+
+
+
+#define SERVER_IP "127.0.0.1"
+#define SERVER_PORT 6767
+#define MAX 255
+#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
+#define UNUSED(x) (void)(x)
+
+
+bool read_rudpfile(int sock, FILE *f)
+{
+	long filesize = 0;
+	char buffer[MAX];
+	char ack_buffer[MAX];
+	int recvd = 0;
+ 	struct sockaddr_in remote_addr ;
+	int buflen = sizeof(ack_buffer);
+//	socklen_t addrlen = sizeof(remote_addr);
+
+	int num =  sizeof(buffer);
+	int ack_num = 0;
+
+	printf("going to read now \n");
+	while((recvd = recvfrom(sock, buffer,
+			MAX, 0, (struct sockaddr *)&remote_addr,
+			(socklen_t* )&num)) > -1)
+	{
+	  
+	    printf("in while loop, recvf buff : %s \n", buffer);
+	    if(strncmp((const char*)buffer, "END",3) == 0) {
+		printf("exit rudp server, recvd_bytes : %d \n", recvd);
+		close(sock);
+		exit(0);
+
+	    }
+
+	    int offset = 0;
+	    printf("will write %d bytes in file now \n", recvd);
+	    do
+	    {
+		size_t written = fwrite(&buffer[offset], 1, recvd-offset, f);
+		if (written < 1)
+		    return false;
+		offset += written;
+	    }
+	    while (offset < recvd);
+
+	    filesize -= (recvd);
+	    bzero(buffer, MAX);
+
+	   /* remote_addr.sin_addr.s_addr
+	    remote_addr.sin_port
+	    inet_ntop(AF_INET, &(remote_addr.sin_addr), peer_ip,
+                RIF_IP_ADDR_SIZE);
+        */
+
+	    snprintf(ack_buffer, buflen,
+             "AckSeq:%d",ack_num);
+
+	  printf("sending ack : %s\n", ack_buffer);
+
+	  int num = sendto(sock, ack_buffer, buflen, 0, (struct sockaddr*)&remote_addr, sizeof(remote_addr));
+	  if (num == -1)
+       	 {
+            return false;
+       	 }
+
+	}
+
+    return true;
+}
+
+/*
+ *  Here is the starting point for your netster part.1 definitions. Add the 
+ *  appropriate comment header as defined in the code formatting guidelines
+ */
+
+/* Add function definitions */
+void stopandwait_server(char* iface, long port, FILE* fp) {
+
+		/* Take the UDP code path */
+     struct sockaddr_in serv_addr;
+     int u_sockfd = -1;
+
+    UNUSED(iface);
+    printf("in stop and wait server updated\n");
+
+    u_sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (u_sockfd < 0) {
+        printf("Failed to get a vaild Socket File Descriptor\n");
+    }
+
+    memset(&serv_addr, 0, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = port;
+    serv_addr.sin_port = htons(serv_addr.sin_port);
+    serv_addr.sin_addr.s_addr = INADDR_ANY;
+   /* res = inet_pton(AF_INET,(const char *)iface,
+                    &(serv_addr.sin_addr));
+
+    printf("res : %d \n",res);
+    if (res != 1) {
+            printf("Failed to retrieve local chassis ip address,"
+                     "errno : %d, error code : %s",errno, strerror(errno));
+            return ;
+    }
+
+*/
+    if (bind(u_sockfd, (struct sockaddr *)&serv_addr,
+        sizeof(serv_addr)) < 0) {
+        printf("Transport: Config Socket Bind failed,"
+                "errno : %d, error code : %s \n",
+                errno, strerror(errno));
+    }
+
+    bool ok = read_rudpfile(u_sockfd, fp);
+
+    if (!ok)
+    {
+	printf("error read");
+    }
+
+    close(u_sockfd);
+    exit(0);
+}
+
+bool send_rudpdata(int sock,struct sockaddr_in servaddr, void *buf, int buflen)
+{
+    unsigned char *pbuf = (unsigned char *) buf;
+    printf("send rudp data \n");
+
+    while (buflen > 0)
+    {
+	int num = sendto(sock, pbuf, buflen, 0, (struct sockaddr*)&servaddr, sizeof(servaddr));
+        if (num == -1)
+        {
+            return false;
+        }
+
+	printf("buff sent : %s\n", pbuf);
+        pbuf += num;
+        buflen -= num;
+    }
+
+    return true;
+}
+
+bool send_rudpfile(int sock, struct sockaddr_in servaddr, FILE *f)
+{
+    fseek(f, 0, SEEK_END);
+    long filesize = ftell(f);
+    rewind(f);
+
+    printf("send rudp file : %ld \n", filesize);
+    if (filesize == EOF)
+        return false;
+
+    if (filesize > 0)
+    {
+        char buffer[MAX];
+        do
+        {
+            size_t num =  sizeof(buffer);
+            num = fread(buffer, 1, num, f);
+            if (num < 1)
+                return false;
+
+	    printf("calling sendto \n");
+            if (!send_rudpdata(sock, servaddr,  buffer, num))
+                return false;
+
+            filesize -= num;
+        }
+        while (filesize > 0);
+    }
+    return true;
+}
+
+void stopandwait_client(char* host, long port, FILE* fp) {
+
+    int f_sockfd,res =0;
+    char send_buff[MAX],buffer[MAX];
+    struct sockaddr_in     servaddr;
+  
+    printf("in rudp client \n");
+    // Creating socket file descriptor
+    if ( (f_sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
+        perror("socket creation failed\n");
+        exit(EXIT_FAILURE);
+    }
+  
+    memset(&servaddr, 0, sizeof(servaddr));
+    bzero(send_buff, sizeof(send_buff));
+    bzero(buffer, sizeof(buffer));
+ 
+    // Filling server information
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_port = htons(port);
+   // servaddr.sin_addr.s_addr = INADDR_ANY;
+       res = inet_pton(AF_INET, host,
+                    &(servaddr.sin_addr));
+    if (res != 1) {
+            printf("Failed to retrieve local chassis ip address,"
+                     "errno : %d, error code : %s",errno, strerror(errno));
+            return;
+    }
+      
+    bzero(send_buff, sizeof(send_buff));
+    bzero(buffer, sizeof(buffer));
+    
+     // Sending the data
+  
+
+    send_rudpfile(f_sockfd, servaddr, fp);
+    int num =  sizeof(buffer);
+
+    int recvd = recvfrom(f_sockfd, buffer,
+                        MAX, 0, (struct sockaddr *)&servaddr,
+                        (socklen_t* )&num);
+
+     if(recvd < 0) { printf("nothing read\n");}
+
+    printf("ack received  : %s \n", buffer);
+        
+
+    const char *tmp = "END";
+    /* for terminating the server, send "END" */
+    memset(buffer, 0, sizeof buffer);
+    strncpy(buffer, tmp, sizeof buffer - 1);
+
+    if(sendto(f_sockfd, buffer, MAX, 0, (struct sockaddr*)&servaddr, sizeof(servaddr)) == -1) {
+      perror("[ERROR] sending data to the server.");
+      exit(1);
+    }
+    printf("Ending client buff sent : %s\n", buffer);
+    bzero(buffer, MAX);
+
+   close(f_sockfd);     
+   exit(0);
+}

@@ -1,0 +1,438 @@
+Computer Networks Assignment 2 :
+
+1.) DNS used to load balance services:
+
+Load balancing in DNS is a specific type of load balancing that is used to distribute traffic across several servers. What happens is that it provides different IP addresses in response to DNS queries. There can be various methods or rules for deciding a way to choose which IP address to share in response to a DNS query.
+The most popular DNS loan balancing technique is round robin DNS. In this, we have a DNS server called as an authoritative name server.These servers hold DNS records called A records which contains a domain name and its matching IP address, in round robin DNS, there are several A records tied to a different IP address, so as the DNS queries come in , these IP addresses rotate in a round robin fashion and load balances the requests to different associated servers. 
+
+Example for google.com :
+Notice the output of “dig google.com" every time, the time to live keeps on increasing with every dig attempt and then we see the “time to live” resetting to a default value and the IP address is changed, means another DNS server responded with  the IP address of google of whose the IP address is changed meaning DNS server is changed and keeps on shuffling.
+
+umasharm@silo:~$ dig google.com
+
+; <<>> DiG 9.16.1-Ubuntu <<>> google.com
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 810
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 65494
+;; QUESTION SECTION:
+;google.com.			IN	A
+
+;; ANSWER SECTION:
+google.com.		2	IN	A	142.250.190.14 -> TTL:2sec
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.53#53(127.0.0.53)
+;; WHEN: Fri Sep 17 22:27:10 EDT 2021
+;; MSG SIZE  rcvd: 55
+
+umasharm@silo:~$ dig google.com
+
+; <<>> DiG 9.16.1-Ubuntu <<>> google.com
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 13120
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 65494
+;; QUESTION SECTION:
+;google.com.			IN	A
+
+;; ANSWER SECTION:
+google.com.		0	IN	A	142.250.190.14 -> TTL: 0 sec
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.53#53(127.0.0.53)
+;; WHEN: Fri Sep 17 22:27:12 EDT 2021
+;; MSG SIZE  rcvd: 55
+
+umasharm@silo:~$ dig google.com
+
+; <<>> DiG 9.16.1-Ubuntu <<>> google.com
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 45794
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 65494
+;; QUESTION SECTION:
+;google.com.			IN	A
+
+;; ANSWER SECTION:
+google.com.		222	IN	A	142.250.191.238 ->TTL expires, and due to load balancing another DNS server returns the IP address. 
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.53#53(127.0.0.53)
+;; WHEN: Fri Sep 17 22:27:13 EDT 2021
+;; MSG SIZE  rcvd: 55
+
+umasharm@silo:~$ 
+
+
+Two DNS servers responded with a different IP address meaning there a change in the DNS server when the time to live expires and this proves load balancing concept in DNS server.
+
+(base) umasharm@Umangs-MacBook-Pro ~ % dig google.com
+
+; <<>> DiG 9.10.6 <<>> google.com
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 14902
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 512
+;; QUESTION SECTION:
+;google.com.			IN	A
+
+;; ANSWER SECTION:
+google.com.		75	IN	A	142.250.191.206
+
+;; Query time: 29 msec
+;; SERVER: 2001:558:feed::1#53(2001:558:feed::1)
+;; WHEN: Fri Sep 17 04:23:00 EDT 2021
+;; MSG SIZE  rcvd: 55
+
+(base) umasharm@Umangs-MacBook-Pro ~ % dig ns google.com
+
+; <<>> DiG 9.10.6 <<>> ns google.com
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 53728
+;; flags: qr rd ra; QUERY: 1, ANSWER: 4, AUTHORITY: 0, ADDITIONAL: 9
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 512
+;; QUESTION SECTION:
+;google.com.			IN	NS
+
+;; ANSWER SECTION:
+google.com.		255569	IN	NS	ns4.google.com.
+google.com.		255569	IN	NS	ns2.google.com.
+google.com.		255569	IN	NS	ns3.google.com.
+google.com.		255569	IN	NS	ns1.google.com.
+
+;; ADDITIONAL SECTION:
+ns1.google.com.		255561	IN	A	216.239.32.10
+ns1.google.com.		255562	IN	AAAA	2001:4860:4802:32::a
+ns4.google.com.		255561	IN	A	216.239.38.10
+ns4.google.com.		255561	IN	AAAA	2001:4860:4802:38::a
+ns2.google.com.		255561	IN	A	216.239.34.10
+ns2.google.com.		255561	IN	AAAA	2001:4860:4802:34::a
+ns3.google.com.		255561	IN	A	216.239.36.10
+ns3.google.com.		255561	IN	AAAA	2001:4860:4802:36::a
+
+;; Query time: 27 msec
+;; SERVER: 2001:558:feed::1#53(2001:558:feed::1)
+;; WHEN: Fri Sep 17 04:23:04 EDT 2021
+;; MSG SIZE  rcvd: 287
+
+(base) umasharm@Umangs-MacBook-Pro ~ % 
+
+
+
+Question 2.)
+
+In DNS, as hosts trust each other, on the basis of host names, an attacker can just spoof the host name instead of the IP address.
+
+An inherent vulnerability with the DNS is that a name server allows recursive queries from arbitrary IP addresses. This approach is vulnerable to attacks such as cache-poisoning attacks, in which a hacker can cause the name server to have a cache that is poisoned or fabricated. This shall cause the users to access sites which are seemingly similar to the real pages, which shall try to steal their personal information such as card details or passwords. A core DNS attack, cache-poisoning attack, poisons DNS cache so that it could send legitimate requests to malicious websites by having incorrect IP addresses in the cache. In a way, the attacker impersonates to be a DNS name server.
+
+A hacker can even redirect all the information a user entered on a netbanking page to a webserver which is a replica of the actual netbanking page and can steal account numbers and passwords.
+
+Other attack could be a DDOS attack which is basically blocking the TCP hanging connections by overwhelming the server with numerous unwanted SYN and SYN+ACK which slows down the server and ultimately causes it to crash or fail. This shall cause the DNS servers to ignore or drop the legitimate queries and stuck on the unwanted queries.
+
+
+Question 3.)
+
+Terminal Output
+
+
+-> To know the root servers
+
+(base) umasharm@Umangs-MacBook-Pro ~ % dig NS .
+
+; <<>> DiG 9.10.6 <<>> NS .
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 46153
+;; flags: qr rd ra ad; QUERY: 1, ANSWER: 13, AUTHORITY: 0, ADDITIONAL: 27
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
+;; QUESTION SECTION:
+;.				IN	NS
+
+;; ANSWER SECTION:
+.			398340	IN	NS	b.root-servers.net.
+.			398340	IN	NS	i.root-servers.net.
+.			398340	IN	NS	g.root-servers.net.
+.			398340	IN	NS	j.root-servers.net.
+.			398340	IN	NS	e.root-servers.net.
+.			398340	IN	NS	a.root-servers.net.
+.			398340	IN	NS	k.root-servers.net.
+.			398340	IN	NS	m.root-servers.net.
+.			398340	IN	NS	f.root-servers.net.
+.			398340	IN	NS	l.root-servers.net.
+.			398340	IN	NS	c.root-servers.net.
+.			398340	IN	NS	h.root-servers.net.
+.			398340	IN	NS	d.root-servers.net.
+
+;; ADDITIONAL SECTION:
+a.root-servers.net.	570711	IN	A	198.41.0.4
+b.root-servers.net.	599240	IN	A	199.9.14.201
+c.root-servers.net.	509672	IN	A	192.33.4.12
+d.root-servers.net.	498323	IN	A	199.7.91.13
+e.root-servers.net.	495556	IN	A	192.203.230.10
+f.root-servers.net.	494565	IN	A	192.5.5.241
+g.root-servers.net.	504100	IN	A	192.112.36.4
+h.root-servers.net.	494565	IN	A	198.97.190.53
+i.root-servers.net.	600288	IN	A	192.36.148.17
+j.root-servers.net.	503170	IN	A	192.58.128.30
+k.root-servers.net.	495976	IN	A	193.0.14.129
+l.root-servers.net.	484476	IN	A	199.7.83.42
+m.root-servers.net.	461227	IN	A	202.12.27.33
+a.root-servers.net.	591033	IN	AAAA	2001:503:ba3e::2:30
+b.root-servers.net.	495791	IN	AAAA	2001:500:200::b
+c.root-servers.net.	498027	IN	AAAA	2001:500:2::c
+d.root-servers.net.	484302	IN	AAAA	2001:500:2d::d
+e.root-servers.net.	495791	IN	AAAA	2001:500:a8::e
+f.root-servers.net.	484302	IN	AAAA	2001:500:2f::f
+g.root-servers.net.	504100	IN	AAAA	2001:500:12::d0d
+h.root-servers.net.	550368	IN	AAAA	2001:500:1::53
+i.root-servers.net.	484476	IN	AAAA	2001:7fe::53
+j.root-servers.net.	484302	IN	AAAA	2001:503:c27::2:30
+k.root-servers.net.	587749	IN	AAAA	2001:7fd::1
+l.root-servers.net.	509672	IN	AAAA	2001:500:9f::42
+m.root-servers.net.	484302	IN	AAAA	2001:dc3::35
+
+;; Query time: 16 msec
+;; SERVER: 10.79.1.1#53(10.79.1.1)
+;; WHEN: Fri Sep 17 18:05:49 EDT 2021
+;; MSG SIZE  rcvd: 811
+
+
+
+-> DNS query on root server gave us other DNS servers IP addresses, which we would query in this step to know the next DNS server IP address.
+
+(base) umasharm@Umangs-MacBook-Pro ~ % dig @b.root-servers.net. mail-relay.iu.edu
+
+; <<>> DiG 9.10.6 <<>> @b.root-servers.net. mail-relay.iu.edu
+; (2 servers found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 6738
+;; flags: qr rd; QUERY: 1, ANSWER: 0, AUTHORITY: 13, ADDITIONAL: 27
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; QUESTION SECTION:
+;mail-relay.iu.edu.		IN	A
+
+;; AUTHORITY SECTION:
+edu.			172800	IN	NS	a.edu-servers.net.
+edu.			172800	IN	NS	b.edu-servers.net.
+edu.			172800	IN	NS	c.edu-servers.net.
+edu.			172800	IN	NS	d.edu-servers.net.
+edu.			172800	IN	NS	e.edu-servers.net.
+edu.			172800	IN	NS	f.edu-servers.net.
+edu.			172800	IN	NS	g.edu-servers.net.
+edu.			172800	IN	NS	h.edu-servers.net.
+edu.			172800	IN	NS	i.edu-servers.net.
+edu.			172800	IN	NS	j.edu-servers.net.
+edu.			172800	IN	NS	k.edu-servers.net.
+edu.			172800	IN	NS	l.edu-servers.net.
+edu.			172800	IN	NS	m.edu-servers.net.
+
+;; ADDITIONAL SECTION:
+a.edu-servers.net.	172800	IN	A	192.5.6.30
+a.edu-servers.net.	172800	IN	AAAA	2001:503:a83e::2:30
+b.edu-servers.net.	172800	IN	A	192.33.14.30
+b.edu-servers.net.	172800	IN	AAAA	2001:503:231d::2:30
+c.edu-servers.net.	172800	IN	A	192.26.92.30
+c.edu-servers.net.	172800	IN	AAAA	2001:503:83eb::30
+d.edu-servers.net.	172800	IN	A	192.31.80.30
+d.edu-servers.net.	172800	IN	AAAA	2001:500:856e::30
+e.edu-servers.net.	172800	IN	A	192.12.94.30
+e.edu-servers.net.	172800	IN	AAAA	2001:502:1ca1::30
+f.edu-servers.net.	172800	IN	A	192.35.51.30
+f.edu-servers.net.	172800	IN	AAAA	2001:503:d414::30
+g.edu-servers.net.	172800	IN	A	192.42.93.30
+g.edu-servers.net.	172800	IN	AAAA	2001:503:eea3::30
+h.edu-servers.net.	172800	IN	A	192.54.112.30
+h.edu-servers.net.	172800	IN	AAAA	2001:502:8cc::30
+i.edu-servers.net.	172800	IN	A	192.43.172.30
+i.edu-servers.net.	172800	IN	AAAA	2001:503:39c1::30
+j.edu-servers.net.	172800	IN	A	192.48.79.30
+j.edu-servers.net.	172800	IN	AAAA	2001:502:7094::30
+k.edu-servers.net.	172800	IN	A	192.52.178.30
+k.edu-servers.net.	172800	IN	AAAA	2001:503:d2d::30
+l.edu-servers.net.	172800	IN	A	192.41.162.30
+l.edu-servers.net.	172800	IN	AAAA	2001:500:d937::30
+m.edu-servers.net.	172800	IN	A	192.55.83.30
+m.edu-servers.net.	172800	IN	AAAA	2001:501:b1f9::30
+
+;; Query time: 50 msec
+;; SERVER: 199.9.14.201#53(199.9.14.201)
+;; WHEN: Fri Sep 17 18:06:09 EDT 2021
+;; MSG SIZE  rcvd: 841
+
+
+
+->DNS query on b.root-servers.net. server gave us other DNS servers IP addresses, which would query in this step to know the next DNS server IP address.
+
+(base) umasharm@Umangs-MacBook-Pro ~ % dig @a.edu-servers.net. mail-relay.iu.edu
+
+; <<>> DiG 9.10.6 <<>> @a.edu-servers.net. mail-relay.iu.edu
+; (2 servers found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 30757
+;; flags: qr rd; QUERY: 1, ANSWER: 0, AUTHORITY: 3, ADDITIONAL: 6
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
+;; QUESTION SECTION:
+;mail-relay.iu.edu.		IN	A
+
+;; AUTHORITY SECTION:
+iu.edu.			172800	IN	NS	dns1.iu.edu.
+iu.edu.			172800	IN	NS	dns2.iu.edu.
+iu.edu.			172800	IN	NS	dns3.iu.edu.
+
+;; ADDITIONAL SECTION:
+dns1.iu.edu.		172800	IN	A	134.68.220.8
+dns1.iu.edu.		172800	IN	AAAA	2001:18e8:3:220::10
+dns2.iu.edu.		172800	IN	A	129.79.1.8
+dns2.iu.edu.		172800	IN	AAAA	2001:18e8:2:8::10
+dns3.iu.edu.		172800	IN	A	52.23.85.80
+
+;; Query time: 34 msec
+;; SERVER: 192.5.6.30#53(192.5.6.30)
+;; WHEN: Fri Sep 17 18:06:33 EDT 2021
+;; MSG SIZE  rcvd: 207
+
+
+->DNS query on a.edu-servers.net. server gave us other DNS servers IP addresses, which we would query in this step to know the next DNS server IP address.
+
+
+(base) umasharm@Umangs-MacBook-Pro ~ % dig @dns1.iu.edu. mail-relay.iu.edu
+
+; <<>> DiG 9.10.6 <<>> @dns1.iu.edu. mail-relay.iu.edu
+; (2 servers found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 2703
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 3, ADDITIONAL: 6
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
+;; QUESTION SECTION:
+;mail-relay.iu.edu.		IN	A
+
+;; ANSWER SECTION:
+mail-relay.iu.edu.	300	IN	A	129.79.1.38
+mail-relay.iu.edu.	300	IN	A	134.68.220.47
+
+;; AUTHORITY SECTION:
+iu.edu.			3600	IN	NS	dns3.iu.edu.
+iu.edu.			3600	IN	NS	dns1.iu.edu.
+iu.edu.			3600	IN	NS	dns2.iu.edu.
+
+;; ADDITIONAL SECTION:
+dns1.iu.edu.		3600	IN	A	134.68.220.8
+dns2.iu.edu.		3600	IN	A	129.79.1.8
+dns3.iu.edu.		3600	IN	A	52.23.85.80
+dns1.iu.edu.		3600	IN	AAAA	2001:18e8:3:220::10
+dns2.iu.edu.		3600	IN	AAAA	2001:18e8:2:8::10
+
+;; Query time: 8 msec
+;; SERVER: 134.68.220.8#53(134.68.220.8)
+;; WHEN: Fri Sep 17 18:06:56 EDT 2021
+;; MSG SIZE  rcvd: 239
+
+@dns1.iu.edu. gave us the IP address of mail-relay.iu.edu 
+
+
+
+
+Question 4)
+
+In public WLAN, if we sniff the packets, we see all the DNS request traffic runs on User Datagram Protocol(UDP) on port 53 . Also, these DNS queries are typically unprotected and unencrypted in the public WLANs. This can have severe implications related to security of the users accessing the public WLANs. 
+
+
+Any attacker machine can easily redirect the traffic, regardless of the destination, to its own DNS server. This basically leads to phishing attack. For accessing the private information of the users , targeted sites will be hosted by a web server which would almost be similar to the real page. In order to change the targeted sites, the attacker only needs to edit the DNS and web server. 
+
+
+As an end result, the user would be accessing the phishing sites which shall try to steal personal information such as SSN, card numbers or passwords. User security can be compromised, to prevent this, there should be an encryption in the DNS which shall prevent these phishing attacks.
+
+
+Question 5.)
+
+To see if an external site has been accessed or not, we shall run a dig command on it first:
+
+umasharm@silo:~$ dig stackoverflow.com
+
+; <<>> DiG 9.16.1-Ubuntu <<>> stackoverflow.com
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 7625
+;; flags: qr rd ra; QUERY: 1, ANSWER: 4, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 65494
+;; QUESTION SECTION:
+;stackoverflow.com.		IN	A
+
+;; ANSWER SECTION:
+stackoverflow.com.	300	IN	A	151.101.65.69
+stackoverflow.com.	300	IN	A	151.101.193.69
+stackoverflow.com.	300	IN	A	151.101.129.69
+stackoverflow.com.	300	IN	A	151.101.1.69
+
+;; Query time: 8 msec
+;; SERVER: 127.0.0.53#53(127.0.0.53)
+;; WHEN: Fri Sep 17 22:01:43 EDT 2021
+;; MSG SIZE  rcvd: 110
+
+umasharm@silo:~$ dig stackoverflow.com
+
+; <<>> DiG 9.16.1-Ubuntu <<>> stackoverflow.com
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 50885
+;; flags: qr rd ra; QUERY: 1, ANSWER: 4, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 65494
+;; QUESTION SECTION:
+;stackoverflow.com.		IN	A
+
+;; ANSWER SECTION:
+stackoverflow.com.	298	IN	A	151.101.1.69
+stackoverflow.com.	298	IN	A	151.101.129.69
+stackoverflow.com.	298	IN	A	151.101.193.69
+stackoverflow.com.	298	IN	A	151.101.65.69
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.53#53(127.0.0.53)
+;; WHEN: Fri Sep 17 22:01:45 EDT 2021
+;; MSG SIZE  rcvd: 110
+
+umasharm@silo:~$ 
+^Z
+
+Since the query time on next query is 0 msec, that means this external site was recently accessed and it is cached in the Internal IU DNS server.
+
+Another possible approach on MAC:
+
+Use mDNSResponder command to dump the DNS cache and from the output file from this dump, we should be able to see all the queries sent to the DNS server and all which has been cached.
+
+
+
+
